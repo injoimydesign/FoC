@@ -6,6 +6,9 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
+use Illuminate\Support\Facades\Password;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,15 +46,25 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
 
+// Password Reset Routes
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+    ->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+    ->name('password.email');
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
+    ->name('password.reset');
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])
+    ->name('password.update');
+
+// Checkout Routes (allow guests to view cart, but require auth for payment)
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/create-session', [CheckoutController::class, 'createSession'])->middleware('auth')->name('checkout.create-session');
+Route::get('/checkout/success', [CheckoutController::class, 'success'])->middleware('auth')->name('checkout.success');
+
 // Authenticated Routes
 Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Checkout Routes
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout/create-session', [CheckoutController::class, 'createSession'])->name('checkout.create-session');
-    Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
 
     // User Profile Routes
     Route::get('/profile', [DashboardController::class, 'profile'])->name('profile');
@@ -60,26 +73,6 @@ Route::middleware(['auth'])->group(function () {
 
 // Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
-
-    // Flag Management
-    Route::resource('flags', Admin\FlagController::class);
-
-    // Flag Event Management
-    Route::resource('flag-events', Admin\FlagEventController::class);
-
-    // Subscription Management
-    Route::get('/subscriptions', [Admin\SubscriptionController::class, 'index'])->name('subscriptions.index');
-    Route::get('/subscriptions/{subscription}', [Admin\SubscriptionController::class, 'show'])->name('subscriptions.show');
-    Route::put('/subscriptions/{subscription}/toggle', [Admin\SubscriptionController::class, 'toggle'])->name('subscriptions.toggle');
-
-    // Route Management
-    Route::resource('routes', Admin\RouteController::class);
-
-    // User Management
-    Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
-    Route::get('/users/{user}', [Admin\UserController::class, 'show'])->name('users.show');
-
-    // Reports
-    Route::get('/reports', [Admin\ReportController::class, 'index'])->name('reports.index');
+    Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('dashboard');
+    // Add more admin routes here
 });

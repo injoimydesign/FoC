@@ -20,6 +20,7 @@ class CheckoutController extends Controller
 
     /**
      * Show the checkout form.
+     * Accessible to guests, but they'll need to login to complete payment.
      */
     public function index()
     {
@@ -29,25 +30,32 @@ class CheckoutController extends Controller
 
     /**
      * Create a Stripe checkout session.
+     * Requires authentication.
      */
     public function createSession(Request $request)
     {
+        // Ensure user is authenticated
+        if (!Auth::check()) {
+            return response()->json([
+                'error' => 'Authentication required',
+                'redirect' => route('login')
+            ], 401);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email',
             'address' => 'required|string',
-            'flag_id' => 'required|exists:flags,id',
             'purchase_type' => 'required|in:one_time,subscription',
             'notes' => 'nullable|string',
+            'cart_items' => 'required|array|min:1',
+            'cart_items.*.flag_id' => 'required|exists:flags,id',
+            'cart_items.*.quantity' => 'required|integer|min:1',
+            'cart_items.*.base_price' => 'required|numeric|min:0',
         ]);
 
-        $flag = Flag::findOrFail($request->flag_id);
         $user = Auth::user();
-
-        // Calculate prices
-        $basePrice = $flag->base_price;
-        $processingFee = Payment::calculateProcessingFee($basePrice);
-        $totalAmount = $basePrice + $processingFee;
+        $cartItems = $request->cart_items;
 
         // Create or get location
         $location = Location::firstOrCreate(
@@ -56,39 +64,50 @@ class CheckoutController extends Controller
         );
 
         try {
-            if ($request->purchase_type === 'subscription') {
-                // Yearly subscription
-                $yearlyPrice = $basePrice * 12 * 0.8; // 20% discount
-                
-                $session = Session::create([
-                    'customer_email' => $request->email,
-                    'line_items' => [[
+            // Build line items for Stripe
+            $lineItems = [];
+            $totalAmount = 0;
+            $metadata = [
+                'user_id' => $user->id,
+                'location_id' => $location->id,
+                'purchase_type' => $request->purchase_type,
+            ];
+
+            foreach ($cartItems as $index => $item) {
+                $flag = Flag::findOrFail($item['flag_id']);
+                $quantity = (int) $item['quantity'];
+                $basePrice = (float) $item['base_price'];
+
+                // Calculate processing fee for this item
+                $processingFee = Payment::calculateProcessingFee($basePrice);
+                $itemTotal = ($basePrice + $processingFee) * $quantity;
+                $totalAmount += $itemTotal;
+
+                // Store flag IDs in metadata
+                $metadata["flag_id_{$index}"] = $flag->id;
+                $metadata["quantity_{$index}"] = $quantity;
+
+                if ($request->purchase_type === 'subscription') {
+                    // Yearly subscription with 20% discount
+                    $yearlyPrice = $basePrice * 12 * 0.8;
+                    $yearlyPriceWithFee = $yearlyPrice + Payment::calculateProcessingFee($yearlyPrice);
+
+                    $lineItems[] = [
                         'price_data' => [
                             'currency' => 'usd',
                             'product_data' => [
-                                'name' => 'Flag Service - Yearly Subscription',
+                                'name' => $flag->name . ' - Yearly Subscription',
                                 'description' => 'Annual flag service with automatic seasonal changes',
+                                'images' => [$flag->image_url],
                             ],
-                            'unit_amount' => round($yearlyPrice * 100),
+                            'unit_amount' => round($yearlyPriceWithFee * 100),
                             'recurring' => ['interval' => 'year'],
                         ],
-                        'quantity' => 1,
-                    ]],
-                    'mode' => 'subscription',
-                    'success_url' => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}',
-                    'cancel_url' => route('checkout.index'),
-                    'metadata' => [
-                        'user_id' => $user->id,
-                        'flag_id' => $flag->id,
-                        'location_id' => $location->id,
-                        'purchase_type' => 'subscription',
-                    ],
-                ]);
-            } else {
-                // One-time payment
-                $session = Session::create([
-                    'customer_email' => $request->email,
-                    'line_items' => [[
+                        'quantity' => $quantity,
+                    ];
+                } else {
+                    // One-time payment
+                    $lineItems[] = [
                         'price_data' => [
                             'currency' => 'usd',
                             'product_data' => [
@@ -96,21 +115,24 @@ class CheckoutController extends Controller
                                 'description' => $flag->description,
                                 'images' => [$flag->image_url],
                             ],
-                            'unit_amount' => round($totalAmount * 100),
+                            'unit_amount' => round(($basePrice + $processingFee) * 100),
                         ],
-                        'quantity' => 1,
-                    ]],
-                    'mode' => 'payment',
-                    'success_url' => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}',
-                    'cancel_url' => route('checkout.index'),
-                    'metadata' => [
-                        'user_id' => $user->id,
-                        'flag_id' => $flag->id,
-                        'location_id' => $location->id,
-                        'purchase_type' => 'one_time',
-                    ],
-                ]);
+                        'quantity' => $quantity,
+                    ];
+                }
             }
+
+            // Create Stripe session
+            $sessionData = [
+                'customer_email' => $request->email,
+                'line_items' => $lineItems,
+                'mode' => $request->purchase_type === 'subscription' ? 'subscription' : 'payment',
+                'success_url' => route('checkout.success') . '?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => route('checkout.index'),
+                'metadata' => $metadata,
+            ];
+
+            $session = Session::create($sessionData);
 
             return response()->json(['url' => $session->url]);
         } catch (\Exception $e) {
@@ -124,7 +146,7 @@ class CheckoutController extends Controller
     public function success(Request $request)
     {
         $sessionId = $request->query('session_id');
-        
+
         if (!$sessionId) {
             return redirect()->route('home')->with('error', 'Invalid session');
         }
@@ -133,32 +155,40 @@ class CheckoutController extends Controller
             $session = Session::retrieve($sessionId);
             $metadata = $session->metadata;
 
-            // Create subscription
-            $subscription = Subscription::create([
-                'user_id' => $metadata->user_id,
-                'flag_id' => $metadata->flag_id,
-                'location_id' => $metadata->location_id,
-                'stripe_customer_id' => $session->customer,
-                'stripe_subscription_id' => $session->subscription ?? null,
-                'subscription_type' => $metadata->purchase_type,
-                'price' => $session->amount_total / 100,
-                'start_date' => now(),
-                'active' => true,
-            ]);
+            // Create subscriptions for each item
+            $subscriptions = [];
+            $itemIndex = 0;
 
-            // Create payment record
-            Payment::create([
-                'user_id' => $metadata->user_id,
-                'subscription_id' => $subscription->id,
-                'stripe_session_id' => $sessionId,
-                'amount' => $session->amount_total / 100,
-                'status' => 'completed',
-                'payment_type' => $metadata->purchase_type,
-            ]);
+            while (isset($metadata["flag_id_{$itemIndex}"])) {
+                $subscription = Subscription::create([
+                    'user_id' => $metadata->user_id,
+                    'flag_id' => $metadata["flag_id_{$itemIndex}"],
+                    'location_id' => $metadata->location_id,
+                    'stripe_customer_id' => $session->customer,
+                    'stripe_subscription_id' => $session->subscription ?? null,
+                    'subscription_type' => $metadata->purchase_type,
+                    'price' => $session->amount_total / 100,
+                    'start_date' => now(),
+                    'active' => true,
+                ]);
 
-            return view('checkout.success', compact('subscription'));
+                // Create payment record
+                Payment::create([
+                    'user_id' => $metadata->user_id,
+                    'subscription_id' => $subscription->id,
+                    'stripe_session_id' => $sessionId,
+                    'amount' => ($session->amount_total / 100) / count($metadata),
+                    'status' => 'completed',
+                    'payment_type' => $metadata->purchase_type,
+                ]);
+
+                $subscriptions[] = $subscription;
+                $itemIndex++;
+            }
+
+            return view('checkout.success', compact('subscriptions'));
         } catch (\Exception $e) {
-            return redirect()->route('home')->with('error', 'Payment verification failed');
+            return redirect()->route('home')->with('error', 'Payment verification failed: ' . $e->getMessage());
         }
     }
 }
