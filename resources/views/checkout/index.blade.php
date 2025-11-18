@@ -3,273 +3,291 @@
 @section('title', 'Checkout - Flag Subscription Service')
 
 @section('content')
-<div class="container mx-auto px-4 py-12">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-4xl font-bold mb-8">Checkout</h1>
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <!-- Cart Items Display -->
-        <div id="cart-items-section" class="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 class="text-2xl font-semibold mb-4">Your Cart</h2>
-            <div id="cart-items-list"></div>
-            <div id="empty-cart" class="text-center py-8 hidden">
-                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                <p class="text-gray-600 mb-4">Your cart is empty</p>
-                <a href="{{ route('flags.index') }}" class="text-blue-900 font-medium hover:underline">
-                    Browse Flags →
-                </a>
-            </div>
-        </div>
+                <!-- Left Column - Checkout Form -->
+                <div class="lg:col-span-2 space-y-6">
 
-        <div id="checkout-form-section">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Checkout Form / Login Section -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                @guest
-                    <!-- Guest View: Login/Register Tabs -->
-                    <div class="mb-6">
-                        <div class="flex border-b border-gray-200">
+                    @guest
+                    <!-- Authentication Section for Guests -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Account</h2>
+
+                        <!-- Auth Tabs -->
+                        <div class="flex border-b border-gray-200 mb-6">
                             <button type="button" onclick="switchAuthTab('login')" id="loginTab"
-                                    class="flex-1 py-3 px-4 text-center font-medium border-b-2 border-blue-900 text-blue-900">
+                                    class="flex-1 py-3 px-4 text-center font-medium border-b-2 border-blue-900 text-blue-900 transition">
                                 Login
                             </button>
                             <button type="button" onclick="switchAuthTab('register')" id="registerTab"
-                                    class="flex-1 py-3 px-4 text-center font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                                    class="flex-1 py-3 px-4 text-center font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition">
                                 Create Account
                             </button>
-                            <button type="button" onclick="switchAuthTab('guest')" id="guestTab"
-                                    class="flex-1 py-3 px-4 text-center font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
-                                Guest Checkout
-                            </button>
+                        </div>
+
+                        <!-- Login Form -->
+                        <div id="loginForm" class="auth-form">
+                            <p class="text-gray-600 mb-4 text-sm">Sign in to complete your purchase</p>
+
+                            <form id="loginFormElement" class="space-y-4">
+                                @csrf
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">Email</label>
+                                    <input type="email" name="email" required
+                                           placeholder="Enter your email"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">Password</label>
+                                    <input type="password" name="password" required
+                                           placeholder="Enter your password"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                </div>
+                                <div class="flex items-center">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="remember" class="rounded border-gray-300 text-blue-900 focus:ring-blue-500">
+                                        <span class="ml-2 text-sm text-gray-600">Remember me</span>
+                                    </label>
+                                </div>
+                                <button type="button" onclick="handleLogin()"
+                                        class="w-full bg-blue-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 transition">
+                                    Login & Continue
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Register Form -->
+                        <div id="registerForm" class="auth-form hidden">
+                            <p class="text-gray-600 mb-4 text-sm">Create an account to complete your purchase</p>
+
+                            <form id="registerFormElement" class="space-y-4">
+                                @csrf
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">Full Name</label>
+                                    <input type="text" name="name" required
+                                           placeholder="Enter your full name"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">Email</label>
+                                    <input type="email" name="email" required
+                                           placeholder="Enter your email"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">Password</label>
+                                    <input type="password" name="password" required minlength="8"
+                                           placeholder="Create a password (min 8 characters)"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">Confirm Password</label>
+                                    <input type="password" name="password_confirmation" required minlength="8"
+                                           placeholder="Confirm your password"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                </div>
+                                <button type="button" onclick="handleRegister()"
+                                        class="w-full bg-blue-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 transition">
+                                    Create Account & Continue
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @endguest
+
+                    <!-- Purchase Options -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                        <div class="flex items-center mb-6">
+                            <svg class="w-6 h-6 mr-3 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <h2 class="text-2xl font-bold text-gray-900">Purchase Options</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- One-Time Purchase -->
+                            <label class="relative cursor-pointer">
+                                <input type="radio" name="purchase_type" value="one_time" class="peer sr-only" checked>
+                                <div class="border-2 border-gray-300 rounded-xl p-6 transition-all hover:border-blue-400 peer-checked:border-blue-900 peer-checked:bg-blue-50">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <h3 class="text-xl font-bold text-gray-900">One-Time Purchase</h3>
+                                        <div class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-blue-900 peer-checked:bg-blue-900 flex items-center justify-center mt-1">
+                                            <div class="w-2 h-2 rounded-full bg-white hidden peer-checked:block"></div>
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-600 text-sm mb-4">Pay once for this flag installation</p>
+                                    <p class="text-3xl font-bold text-gray-900" id="one-time-price">$0.00</p>
+                                </div>
+                                <div class="absolute top-4 right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all peer-checked:border-blue-900 peer-checked:bg-blue-900">
+                                    <svg class="w-4 h-4 text-white hidden peer-checked:block" fill="currentColor" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="4"/>
+                                    </svg>
+                                </div>
+                            </label>
+
+                            <!-- Yearly Subscription -->
+                            <label class="relative cursor-pointer">
+                                <input type="radio" name="purchase_type" value="subscription" class="peer sr-only">
+                                <div class="border-2 border-gray-300 rounded-xl p-6 transition-all hover:border-blue-400 peer-checked:border-blue-900 peer-checked:bg-blue-50">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <h3 class="text-xl font-bold text-gray-900">Yearly Subscription</h3>
+                                        <div class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-blue-900 peer-checked:bg-blue-900 flex items-center justify-center mt-1">
+                                            <div class="w-2 h-2 rounded-full bg-white hidden peer-checked:block"></div>
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-600 text-sm mb-4">Automatic seasonal flag changes all year</p>
+                                    <p class="text-3xl font-bold text-gray-900" id="subscription-price">$0.00<span class="text-base text-gray-600">/year</span></p>
+                                    <p class="text-green-600 text-sm font-medium mt-2">Save 20% vs monthly billing</p>
+                                </div>
+                                <div class="absolute top-4 right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all peer-checked:border-blue-900 peer-checked:bg-blue-900">
+                                    <svg class="w-4 h-4 text-white hidden peer-checked:block" fill="currentColor" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="4"/>
+                                    </svg>
+                                </div>
+                            </label>
                         </div>
                     </div>
 
-                    <!-- Login Form -->
-                    <div id="loginForm" class="auth-form">
-                        <h2 class="text-2xl font-semibold mb-4">Login to Your Account</h2>
-                        <p class="text-gray-600 mb-6">Login to proceed with your order faster</p>
+                    <!-- Installation Location -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Installation Location</h2>
 
-                        <form id="loginFormElement" class="space-y-4">
+                        <form id="checkoutForm" class="space-y-4">
                             @csrf
+
+                            <!-- Street Address -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                <input type="email" name="email" required
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                                <input type="password" name="password" required
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="remember" class="rounded border-gray-300 text-blue-900 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm text-gray-600">Remember me</span>
+                                <label class="block text-sm font-medium text-gray-900 mb-2">
+                                    Street Address <span class="text-red-500">*</span>
                                 </label>
-                                <a href="{{ route('password.request') }}" class="text-sm text-blue-900 hover:underline">Forgot password?</a>
+                                <input type="text" name="street_address" required
+                                       placeholder="Enter your street address"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                             </div>
-                            <button type="button" onclick="handleLogin()"
-                                    class="w-full bg-blue-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-800 transition">
-                                Login & Continue
-                            </button>
-                        </form>
-                    </div>
 
-                    <!-- Register Form -->
-                    <div id="registerForm" class="auth-form hidden">
-                        <h2 class="text-2xl font-semibold mb-4">Create Your Account</h2>
-                        <p class="text-gray-600 mb-6">Sign up to save your order details and track your subscriptions</p>
-
-                        <form id="registerFormElement" class="space-y-4">
-                            @csrf
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                                <input type="text" name="name" required
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                <input type="email" name="email" required
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                                <input type="password" name="password" required minlength="8"
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-                                <input type="password" name="password_confirmation" required minlength="8"
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            </div>
-                            <button type="button" onclick="handleRegister()"
-                                    class="w-full bg-blue-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-800 transition">
-                                Create Account & Continue
-                            </button>
-                        </form>
-                    </div>
-
-                    <!-- Guest Checkout Form -->
-                    <div id="guestForm" class="auth-form hidden">
-                        <h2 class="text-2xl font-semibold mb-4">Guest Checkout</h2>
-                        <p class="text-gray-600 mb-6">Complete your purchase without creating an account</p>
-
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                            <div class="flex items-start">
-                                <svg class="w-5 h-5 text-yellow-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <div class="text-sm text-yellow-800">
-                                    <p class="font-semibold mb-1">Note:</p>
-                                    <p>Guest checkout requires creating an account after payment to manage your subscription.</p>
+                            <!-- City and State -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">
+                                        City <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="city" required
+                                           placeholder="Enter your city"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">
+                                        State <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="state" required
+                                           placeholder="Enter your state"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                                 </div>
                             </div>
-                        </div>
 
-                        <form id="guestCheckoutForm" class="space-y-4">
-                            @csrf
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                                <input type="text" name="name" required
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <!-- ZIP Code and Neighborhood -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">
+                                        ZIP Code <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="zip_code" required
+                                           placeholder="Enter your ZIP code"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 mb-2">
+                                        Neighborhood (optional)
+                                    </label>
+                                    <input type="text" name="neighborhood"
+                                           placeholder="Enter your neighborhood"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                </div>
                             </div>
+
+                            <!-- Notes -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                <input type="email" name="email" required
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <label class="block text-sm font-medium text-gray-900 mb-2">
+                                    Notes (optional)
+                                </label>
+                                <textarea name="notes" rows="4"
+                                          placeholder="Any special instructions for installation..."
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"></textarea>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Installation Address</label>
-                                <textarea name="address" required rows="3"
-                                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Purchase Type</label>
-                                <select name="purchase_type" required
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="one_time">One-Time Purchase</option>
-                                    <option value="subscription">Yearly Subscription (20% off)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes (Optional)</label>
-                                <textarea name="notes" rows="3"
-                                          placeholder="Any special instructions or notes..."
-                                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
-                            </div>
+
+                            <!-- Proceed Button -->
+                            <button type="button" onclick="proceedToPayment()"
+                                    class="w-full bg-blue-900 text-white px-6 py-4 rounded-xl font-semibold text-lg hover:bg-blue-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                </svg>
+                                Proceed to Payment
+                            </button>
                         </form>
                     </div>
-                @else
-                    <!-- Authenticated User View -->
-                    <h2 class="text-2xl font-semibold mb-6">Customer Information</h2>
+                </div>
 
-                    <form id="checkoutForm" class="space-y-4">
-                        @csrf
+                <!-- Right Column - Order Summary -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                            <input type="text" name="name" required
-                                   value="{{ auth()->user()->name }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <!-- Cart Items -->
+                        <div id="cart-items-summary" class="space-y-4 mb-6">
+                            <!-- Items will be loaded here -->
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                            <input type="email" name="email" required
-                                   value="{{ auth()->user()->email }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <div id="empty-cart-message" class="text-center py-8 hidden">
+                            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                            </svg>
+                            <p class="text-gray-500 mb-4">Your cart is empty</p>
+                            <a href="{{ route('flags.index') }}" class="text-blue-900 font-medium hover:underline">
+                                Browse Flags →
+                            </a>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Installation Address</label>
-                            <textarea name="address" required rows="3"
-                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                        <!-- Pricing Breakdown -->
+                        <div id="pricing-breakdown" class="border-t border-gray-200 pt-4 space-y-3">
+                            <div class="flex justify-between text-gray-700">
+                                <span>Base Price</span>
+                                <span id="base-price" class="font-semibold">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-gray-700">
+                                <span>One-Time Fee</span>
+                                <span id="processing-fee" class="font-semibold">+$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-xl font-bold text-gray-900 pt-3 border-t border-gray-200">
+                                <span>Total</span>
+                                <span id="total-price">$0.00</span>
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Purchase Type</label>
-                            <select name="purchase_type" required
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="one_time">One-Time Purchase</option>
-                                <option value="subscription">Yearly Subscription (20% off)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes (Optional)</label>
-                            <textarea name="notes" rows="3"
-                                      placeholder="Any special instructions or notes..."
-                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
-                        </div>
-                    </form>
-                @endguest
-            </div>
-
-            <!-- Order Summary -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-2xl font-semibold mb-6">Order Summary</h2>
-
-                <div class="space-y-4 mb-6">
-                    <div class="flex justify-between text-gray-700">
-                        <span>Subtotal:</span>
-                        <span id="subtotal" class="font-semibold">$0.00</span>
-                    </div>
-                    <div class="flex justify-between text-gray-700">
-                        <span>Processing Fee:</span>
-                        <span id="processingFee" class="font-semibold">$0.00</span>
-                    </div>
-                    <div class="border-t pt-4">
-                        <div class="flex justify-between text-xl font-bold">
-                            <span>Total:</span>
-                            <span id="total">$0.00</span>
-                        </div>
+                        <!-- Edit Cart Button -->
+                        <a href="{{ route('flags.index') }}"
+                           class="mt-6 block w-full text-center px-4 py-3 border-2 border-gray-300 rounded-lg font-medium text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition">
+                            Edit Cart
+                        </a>
                     </div>
                 </div>
 
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <div class="text-sm text-blue-800">
-                            Your payment information is encrypted and secure.
-                        </div>
-                    </div>
-                </div>
-
-                @auth
-                    <button type="button" onclick="proceedToPayment()"
-                            class="w-full bg-blue-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-800 transition">
-                        Proceed to Payment
-                    </button>
-                @else
-                    <button type="button" onclick="proceedToPayment()"
-                            class="w-full bg-blue-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-800 transition">
-                        Continue to Payment
-                    </button>
-                    <p class="text-sm text-gray-600 text-center mt-3">
-                        Complete the form on the left to continue
-                    </p>
-                @endauth
-
-                <div class="mt-4 text-center text-sm text-gray-600">
-                    <svg class="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                    </svg>
-                    SSL Secured Payment
-                </div>
             </div>
         </div>
-        </div><!-- end checkout-form-section -->
     </div>
 </div>
 
 @push('scripts')
 <script src="https://js.stripe.com/v3/"></script>
 <script>
+    console.log('=== Checkout Page Loaded ===');
+
     // Authentication tab switching
     function switchAuthTab(tab) {
+        console.log('Switching to tab:', tab);
+
         // Hide all forms
         document.querySelectorAll('.auth-form').forEach(form => {
             form.classList.add('hidden');
@@ -284,21 +302,20 @@
         // Show selected form and activate tab
         if (tab === 'login') {
             document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('loginTab').classList.add('border-blue-900', 'text-blue-900');
-            document.getElementById('loginTab').classList.remove('border-transparent', 'text-gray-500');
+            const loginTab = document.getElementById('loginTab');
+            loginTab.classList.add('border-blue-900', 'text-blue-900');
+            loginTab.classList.remove('border-transparent', 'text-gray-500');
         } else if (tab === 'register') {
             document.getElementById('registerForm').classList.remove('hidden');
-            document.getElementById('registerTab').classList.add('border-blue-900', 'text-blue-900');
-            document.getElementById('registerTab').classList.remove('border-transparent', 'text-gray-500');
-        } else if (tab === 'guest') {
-            document.getElementById('guestForm').classList.remove('hidden');
-            document.getElementById('guestTab').classList.add('border-blue-900', 'text-blue-900');
-            document.getElementById('guestTab').classList.remove('border-transparent', 'text-gray-500');
+            const registerTab = document.getElementById('registerTab');
+            registerTab.classList.add('border-blue-900', 'text-blue-900');
+            registerTab.classList.remove('border-transparent', 'text-gray-500');
         }
     }
 
     // Handle login
     async function handleLogin() {
+        console.log('Attempting login...');
         const form = document.getElementById('loginFormElement');
         const formData = new FormData(form);
 
@@ -312,6 +329,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('[name="_token"]').value
                 },
                 body: JSON.stringify({
@@ -322,19 +340,21 @@
             });
 
             if (response.ok) {
-                // Login successful, reload page to show authenticated view
+                console.log('Login successful, reloading page...');
                 window.location.reload();
             } else {
                 const data = await response.json();
                 alert('Login failed: ' + (data.message || 'Invalid credentials'));
             }
         } catch (error) {
+            console.error('Login error:', error);
             alert('Login error: ' + error.message);
         }
     }
 
     // Handle registration
     async function handleRegister() {
+        console.log('Attempting registration...');
         const form = document.getElementById('registerFormElement');
         const formData = new FormData(form);
 
@@ -354,6 +374,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('[name="_token"]').value
                 },
                 body: JSON.stringify({
@@ -365,7 +386,7 @@
             });
 
             if (response.ok) {
-                // Registration successful, reload page to show authenticated view
+                console.log('Registration successful, reloading page...');
                 window.location.reload();
             } else {
                 const data = await response.json();
@@ -374,150 +395,124 @@
                 alert('Registration failed:\n' + (errorMessages || data.message || 'Please check your information'));
             }
         } catch (error) {
+            console.error('Registration error:', error);
             alert('Registration error: ' + error.message);
         }
     }
 
-    // Load and display cart items
-    function loadCartItems() {
+    // Load and display cart items in order summary
+    function loadCartSummary() {
+        console.log('Loading cart summary...');
         const cart = JSON.parse(localStorage.getItem('flagCart') || '[]');
-        const cartItemsList = document.getElementById('cart-items-list');
-        const emptyCart = document.getElementById('empty-cart');
-        const checkoutFormSection = document.getElementById('checkout-form-section');
+        console.log('Cart contents:', cart);
+
+        const cartItemsSummary = document.getElementById('cart-items-summary');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const pricingBreakdown = document.getElementById('pricing-breakdown');
 
         if (cart.length === 0) {
-            emptyCart.classList.remove('hidden');
-            checkoutFormSection.style.display = 'none';
+            console.log('Cart is empty');
+            cartItemsSummary.innerHTML = '';
+            emptyCartMessage.classList.remove('hidden');
+            pricingBreakdown.classList.add('hidden');
             return;
         }
 
-        emptyCart.classList.add('hidden');
-        checkoutFormSection.style.display = 'block';
+        console.log('Cart has', cart.length, 'items');
+        emptyCartMessage.classList.add('hidden');
+        pricingBreakdown.classList.remove('hidden');
 
-        let html = '<div class="space-y-3">';
+        let html = '';
         let subtotal = 0;
 
-        cart.forEach((item, index) => {
-            const itemTotal = item.basePrice * item.quantity;
-            subtotal += itemTotal;
+        cart.forEach((item) => {
+            const basePrice = parseFloat(item.basePrice) || 0;
+            const quantity = parseInt(item.quantity) || 1;
+            subtotal += basePrice;
 
             html += `
-                <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex justify-between items-start">
                     <div class="flex-1">
-                        <h3 class="font-semibold">${item.flagName}</h3>
-                        <p class="text-sm text-gray-600">$${item.basePrice.toFixed(2)} × ${item.quantity}</p>
+                        <h4 class="font-semibold text-gray-900">${item.flagName}</h4>
+                        <p class="text-sm text-gray-600">Qty: ${quantity}</p>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <span class="font-semibold">$${itemTotal.toFixed(2)}</span>
-                        <button onclick="removeFromCart(${index})" class="text-red-600 hover:text-red-800">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
+                    <span class="font-semibold text-gray-900">$${basePrice.toFixed(2)}</span>
                 </div>
             `;
         });
 
-        html += '</div>';
-        cartItemsList.innerHTML = html;
-
-        // Update order summary
-        updateOrderSummary(subtotal);
+        cartItemsSummary.innerHTML = html;
+        console.log('Base subtotal:', subtotal);
+        updatePricing(subtotal);
     }
 
-    function removeFromCart(index) {
-        let cart = JSON.parse(localStorage.getItem('flagCart') || '[]');
-        cart.splice(index, 1);
-        localStorage.setItem('flagCart', JSON.stringify(cart));
-        loadCartItems();
-        updateCartCount();
-    }
+    // Update pricing based on purchase type
+    function updatePricing(baseSubtotal) {
+        console.log('Updating pricing with base:', baseSubtotal);
 
-    function updateOrderSummary(subtotal) {
-        // Get purchase type from the appropriate form
-        let purchaseType = 'one_time';
-        const checkoutForm = document.getElementById('checkoutForm');
-        const guestForm = document.getElementById('guestCheckoutForm');
+        const purchaseType = document.querySelector('input[name="purchase_type"]:checked').value;
+        console.log('Purchase type:', purchaseType);
 
-        if (checkoutForm && checkoutForm.querySelector('select[name="purchase_type"]')) {
-            purchaseType = checkoutForm.querySelector('select[name="purchase_type"]').value;
-        } else if (guestForm && guestForm.querySelector('select[name="purchase_type"]')) {
-            purchaseType = guestForm.querySelector('select[name="purchase_type"]').value;
-        }
+        let finalPrice = baseSubtotal;
+        let displayPrice = baseSubtotal;
 
-        let finalSubtotal = subtotal;
-
-        // Apply 20% discount for subscriptions
         if (purchaseType === 'subscription') {
-            finalSubtotal = subtotal * 12 * 0.8; // Yearly price with discount
+            finalPrice = baseSubtotal * 12 * 0.8;
+            displayPrice = finalPrice;
+            console.log('Subscription pricing applied:', finalPrice);
+        } else {
+            displayPrice = baseSubtotal;
+            finalPrice = baseSubtotal;
+            console.log('One-time pricing:', finalPrice);
         }
 
-        const processingFee = calculateProcessingFee(finalSubtotal);
-        const total = finalSubtotal + processingFee;
+        const processingFee = calculateProcessingFee(finalPrice);
+        const total = finalPrice + processingFee;
 
-        document.getElementById('subtotal').textContent = '$' + finalSubtotal.toFixed(2);
-        document.getElementById('processingFee').textContent = '$' + processingFee.toFixed(2);
-        document.getElementById('total').textContent = '$' + total.toFixed(2);
+        console.log('Processing fee:', processingFee);
+        console.log('Total:', total);
+
+        document.getElementById('base-price').textContent = '$' + displayPrice.toFixed(2);
+        document.getElementById('processing-fee').textContent = '+$' + processingFee.toFixed(2);
+        document.getElementById('total-price').textContent = '$' + total.toFixed(2);
+
+        document.getElementById('one-time-price').textContent = '$' + (baseSubtotal + calculateProcessingFee(baseSubtotal)).toFixed(2);
+        document.getElementById('subscription-price').textContent = '$' + (finalPrice + processingFee).toFixed(2);
     }
 
-    function updateCartCount() {
-        const cart = JSON.parse(localStorage.getItem('flagCart') || '[]');
-        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-        const badge = document.getElementById('cart-count');
-        if (badge) {
-            badge.textContent = totalItems;
-            badge.style.display = totalItems > 0 ? 'flex' : 'none';
-        }
-    }
-
-    // Calculate processing fee
+    // Calculate Stripe processing fee
     function calculateProcessingFee(amount) {
         const stripeFeePercent = 0.029;
         const stripeFeeFixed = 0.30;
         return (amount + stripeFeeFixed) / (1 - stripeFeePercent) - amount;
     }
 
-    // Load cart on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        loadCartItems();
-
-        // Update order summary when purchase type changes (for both forms)
-        const checkoutForm = document.getElementById('checkoutForm');
-        const guestForm = document.getElementById('guestCheckoutForm');
-
-        if (checkoutForm && checkoutForm.querySelector('select[name="purchase_type"]')) {
-            checkoutForm.querySelector('select[name="purchase_type"]').addEventListener('change', function() {
-                const cart = JSON.parse(localStorage.getItem('flagCart') || '[]');
-                const subtotal = cart.reduce((sum, item) => sum + (item.basePrice * item.quantity), 0);
-                updateOrderSummary(subtotal);
-            });
-        }
-
-        if (guestForm && guestForm.querySelector('select[name="purchase_type"]')) {
-            guestForm.querySelector('select[name="purchase_type"]').addEventListener('change', function() {
-                const cart = JSON.parse(localStorage.getItem('flagCart') || '[]');
-                const subtotal = cart.reduce((sum, item) => sum + (item.basePrice * item.quantity), 0);
-                updateOrderSummary(subtotal);
-            });
-        }
+    // Handle purchase type change
+    document.querySelectorAll('input[name="purchase_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            console.log('Purchase type changed to:', this.value);
+            const cart = JSON.parse(localStorage.getItem('flagCart') || '[]');
+            const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.basePrice) || 0), 0);
+            updatePricing(subtotal);
+        });
     });
 
-    // Proceed to payment (authenticated users and guest checkout)
+    // Proceed to payment
     async function proceedToPayment() {
-        // Get the appropriate form based on auth status
-        const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
-        let form, formData;
+        console.log('Proceeding to payment...');
 
-        if (isAuthenticated) {
-            form = document.getElementById('checkoutForm');
-            formData = new FormData(form);
-        } else {
-            form = document.getElementById('guestCheckoutForm');
-            formData = new FormData(form);
+        // Check authentication status
+        const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+        console.log('Is authenticated:', isAuthenticated);
+
+        if (!isAuthenticated) {
+            alert('Please login or create an account above to complete your purchase.');
+            // Scroll to auth section
+            document.querySelector('.auth-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
         }
 
+        const form = document.getElementById('checkoutForm');
         if (!form.checkValidity()) {
             form.reportValidity();
             return;
@@ -530,6 +525,13 @@
             return;
         }
 
+        // Get form data
+        const formData = new FormData(form);
+        const purchaseType = document.querySelector('input[name="purchase_type"]:checked').value;
+
+        // Build full address
+        const address = `${formData.get('street_address')}, ${formData.get('city')}, ${formData.get('state')} ${formData.get('zip_code')}`;
+
         // Prepare cart items for API
         const cartItems = cart.map(item => ({
             flag_id: item.flagId,
@@ -537,47 +539,68 @@
             base_price: item.basePrice
         }));
 
-        // Build request body
+        // Build request
         const requestData = {
-            name: formData.get('name'),
-            email: formData.get('email'),
-            address: formData.get('address'),
-            purchase_type: formData.get('purchase_type'),
-            notes: formData.get('notes'),
+            name: '{{ auth()->check() ? auth()->user()->name : "" }}',
+            email: '{{ auth()->check() ? auth()->user()->email : "" }}',
+            address: address,
+            purchase_type: purchaseType,
+            notes: formData.get('notes') || '',
             cart_items: cartItems
         };
+
+        console.log('Sending payment request:', requestData);
 
         try {
             const response = await fetch('{{ route("checkout.create-session") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('[name="_token"]').value
                 },
                 body: JSON.stringify(requestData)
             });
 
+            console.log('Response status:', response.status);
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.error('Expected JSON, got:', contentType);
+                throw new Error('Server error. Please try refreshing the page.');
+            }
+
             const data = await response.json();
+            console.log('Response data:', data);
 
             if (response.status === 401) {
-                // Not authenticated, show message
-                alert('Please login or create an account to continue.');
-                switchAuthTab('login');
+                alert('Your session has expired. Please login again.');
+                window.location.reload();
                 return;
             }
 
+            if (!response.ok) {
+                throw new Error(data.error || 'Payment failed. Please try again.');
+            }
+
             if (data.url) {
-                // Clear cart and redirect to Stripe
+                console.log('Redirecting to Stripe:', data.url);
                 localStorage.removeItem('flagCart');
-                updateCartCount();
                 window.location.href = data.url;
             } else {
-                alert('Error: ' + (data.error || 'Unknown error occurred'));
+                throw new Error('No payment URL received from server.');
             }
         } catch (error) {
-            alert('Error: ' + error.message);
+            console.error('Payment error:', error);
+            alert('Error: ' + error.message + '\n\nPlease refresh the page and try again.');
         }
     }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing...');
+        loadCartSummary();
+    });
 </script>
 @endpush
 @endsection
